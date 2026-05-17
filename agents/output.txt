@@ -1,0 +1,4 @@
+run_time: 2026-05-17T07:55:33.415697Z
+data_path: (none)
+- step: load_dummy_data
+- step: compute_simple_stat: mean=42

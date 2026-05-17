@@ -1,0 +1,7 @@
+.git
+.vscode
+__pycache__
+*.pyc
+agents/output.txt
+agents/output.json
+research/artifacts

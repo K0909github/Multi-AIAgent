@@ -1,0 +1,4 @@
+experiment:
+  name: paper_only_scaffold
+  baseline: true
+  notes: replace with paper-specific settings

@@ -1,0 +1,7 @@
+services:
+  research:
+    build: .
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    entrypoint: ["python", "research/research_workflow.py"]
