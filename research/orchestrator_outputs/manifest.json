@@ -1,0 +1,25 @@
+{
+  "artifacts": [
+    "code_generation.log",
+    "code_hints.json",
+    "code_hints.md",
+    "code_scaffold.json",
+    "code_scaffold.md",
+    "draft_outline.json",
+    "draft_outline.md",
+    "experiment_plan.json",
+    "experiment_plan.md",
+    "final_draft.md",
+    "hypotheses.json",
+    "hypotheses.md",
+    "manifest.json",
+    "metrics.json",
+    "selected_hypothesis.json",
+    "selected_hypothesis.md",
+    "summary.json",
+    "summary.md",
+    "summary.reviewed.md",
+    "summary_review.json",
+    "train_history.json"
+  ]
+}

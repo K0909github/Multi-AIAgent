@@ -17,7 +17,7 @@ import argparse
 import json
 import re
 from dataclasses import dataclass, asdict
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import List, Optional
 
 
@@ -51,6 +51,37 @@ def load_text(path: Path) -> str:
     if path.suffix.lower() == ".pdf":
         return load_text_from_pdf(path)
     return path.read_text(encoding="utf-8", errors="ignore")
+
+
+def resolve_paper_path(raw_path: str) -> Path:
+    """Resolve host/Windows paths inside Docker by trying common mounted locations.
+
+    Examples:
+    - C:\\Multi-AIAgent\\paper.pdf -> /workspace/paper.pdf when the repo is mounted at /workspace
+    - relative paths are kept as-is if they exist
+    """
+    candidates = []
+    original = Path(raw_path)
+    windows_path = PureWindowsPath(raw_path)
+
+    candidates.append(original)
+
+    # When a Windows absolute path is passed into Docker, the file is usually available
+    # under the workspace mount as just the filename.
+    candidates.append(Path(windows_path.name))
+    candidates.append(Path("/workspace") / windows_path.name)
+    candidates.append(Path.cwd() / windows_path.name)
+    candidates.append(Path("/workspace") / original.name)
+    candidates.append(Path.cwd() / original.name)
+
+    for candidate in candidates:
+        try:
+            if candidate.exists():
+                return candidate
+        except OSError:
+            continue
+
+    return original
 
 
 def split_sentences(text: str) -> List[str]:
@@ -221,7 +252,7 @@ def main() -> None:
     parser.add_argument("--title", default=None, help="Optional paper title override")
     args = parser.parse_args()
 
-    paper_path = Path(args.paper)
+    paper_path = resolve_paper_path(args.paper)
     title = args.title or paper_path.stem
     text = load_text(paper_path)
 

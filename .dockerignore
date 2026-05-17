@@ -1,7 +1,48 @@
 .git
 .vscode
-__pycache__
+
+# Python
+__pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+.env
+.env.*
+
+# Editor / OS
+.vscode/
+Thumbs.db
+.DS_Store
+
+# Agent outputs
 agents/output.txt
 agents/output.json
-research/artifacts
+agents/outputs/
+agents/logs/
+
+# Research outputs / experiment artifacts
+research/artifacts/
+research/orchestrator_outputs/
+research/generated_code/__pycache__/
+research/generated_code/*.pyc
+research/data/
+
+# MLflow
+mlruns/
+
+# Large data / models
+data/
+datasets/
+logs/
+checkpoints/
+models/
+results/
+
+# External integrations / backups
+external/
+*.magent.bak
