@@ -1,0 +1,68 @@
+flowchart TB
+  %% ルート
+  subgraph Root[Multi-AIAgent]
+    DC[docker-compose.yml]
+    DF[Dockerfile]
+    HTML[multi-aiagent-structure.html]
+    REQ[requirements.txt]
+    RUN[RUNBOOK.md]
+    AG[agents/]
+    RS[research/]
+    SC[scripts/]
+    TL[tools/]
+  end
+
+  %% agents の主要ファイル
+  subgraph Agents[agents/]
+    AR[agent_run_sequence.md]
+    CG[code_generator.py]
+    CR[code_reviewer.agent.md]
+    EX[experiment.agent.md]
+    HS[hypothesis_selector.py]
+    HA[hypothesis.agent.md]
+    MG[manager.agent.md]
+    MB[mission_board.md]
+    OT[output_template.md]
+    OJ[output.json]
+    PR[paper_reader.agent.md]
+    PRPY[paper_reader.py]
+    PW[paper_writer.agent.md]
+    PL[planner.agent.md]
+    PE[prompts_examples.md]
+    WK[worker.py]
+  end
+
+  %% research の主要構成
+  subgraph Research[research/]
+    RREADME[README.md]
+    RW[research_workflow.py]
+    ART[artifacts/]
+    GC[generated_code/]
+  end
+
+  %% artifacts の例
+  subgraph Artifacts[research/artifacts/]
+    AH[hypotheses.json]
+    SUM[summary.md]
+    PLAN[experiment_plan.md]
+    DRAFT[final_draft.md]
+  end
+
+  Root --> AG
+  Root --> RS
+  Root --> SC
+  Root --> TL
+  AG --> AR
+  AG --> CG
+  AG --> CR
+  AG --> EX
+  AG --> HA
+  AG --> PR
+  AG --> PW
+  RS --> RW
+  RS --> ART
+  RS --> GC
+  ART --> AH
+  ART --> SUM
+  ART --> PLAN
+  ART --> DRAFT
