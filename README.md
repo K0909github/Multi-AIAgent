@@ -81,15 +81,10 @@ pip install -r requirements.txt
 
 - 自動承認が必要なら `.vscode/settings.json` の設定を調整してください。
 
-## リポジトリ構成図（詳細）
 
-以下はこのリポジトリの主要ファイルとフォルダ構成を示す図です。開発フローと成果物の流れを視覚化しています。
+## リポジトリ構成図（テキスト版）
 
-![リポジトリ構成図](docs/diagrams/structure.svg)
-
-**図のテキスト版（補助）**
-
-- Multi-AIAgent (ルート)
+- Multi_AIAgent (ルート)
 	- docker-compose.yml
 	- Dockerfile
 	- multi-aiagent-structure.html
@@ -114,8 +109,6 @@ pip install -r requirements.txt
 	- scripts/ (パイプライン実行スクリプト)
 	- tools/ (補助ツール)
 
-このテキスト版は図の補助説明です。画像が小さい・レンダリングされない場合はこちらを参照してください。
-
 ### フォルダと主なファイルの説明
 
 - **トップレベル**: `docker-compose.yml`, `Dockerfile`, `requirements.txt`, `RUNBOOK.md` — 環境構築と実行手順を定義します。
@@ -133,4 +126,3 @@ pip install -r requirements.txt
 
 ---
 
-必要なら、このMermaid図を画像化して `docs/` に保存するワークフローも追加できます。続けますか？
