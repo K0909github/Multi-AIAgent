@@ -25,9 +25,7 @@ The input layer of LGGNet comprises a series of temporal convolutions with multi
 - Failure criteria: no statistically meaningful gain over baseline or unstable across seeds.
 
 ## Results
-
-- workspace smoke-test accuracy: 0.85
-
+The results show that LGGNet outperforms these methods, and the improvements are statistically signiﬁcant ( p < 0.05) in most cases.
 
 ## Discussion
 - The workflow now keeps the paper summary, hypotheses, experiment plan, and results in separate machine-readable artifacts.

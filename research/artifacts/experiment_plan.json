@@ -9,5 +9,5 @@
     "Log: seed, split, metrics, training curves, confusion matrix, ablation table.",
     "Failure criteria: no statistically meaningful gain over baseline or unstable across seeds."
   ],
-  "source": "C:\\Multi-AIAgent\\LGGNet_Learning_From_Local-Global-Graph_Representations_for_BrainComputer_Interface.pdf"
+  "source": "LGGNet_Learning_From_Local-Global-Graph_Representations_for_BrainComputer_Interface.pdf"
 }

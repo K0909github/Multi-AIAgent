@@ -7,5 +7,5 @@
     "Hypothesis 3: test an alternative readout head or attention aggregator to capture subject-specific variance.",
     "Each hypothesis should be checked against baseline metrics and ablations."
   ],
-  "source": "C:\\Multi-AIAgent\\LGGNet_Learning_From_Local-Global-Graph_Representations_for_BrainComputer_Interface.pdf"
+  "source": "LGGNet_Learning_From_Local-Global-Graph_Representations_for_BrainComputer_Interface.pdf"
 }
