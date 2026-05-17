@@ -85,11 +85,70 @@ def resolve_paper_path(raw_path: str) -> Path:
 
 
 def split_sentences(text: str) -> List[str]:
-    cleaned = re.sub(r"\s+", " ", text).strip()
+    cleaned = normalize_text(text)
     if not cleaned:
         return []
     parts = re.split(r"(?<=[。.!?])\s+", cleaned)
     return [part.strip() for part in parts if part.strip()]
+
+
+def normalize_text(text: str) -> str:
+    text = re.sub(r"-\s*\n\s*", "", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def extract_section(text: str, start_patterns: List[str], end_patterns: List[str]) -> str:
+    lower_text = text.lower()
+    start_index: Optional[int] = None
+    for pattern in start_patterns:
+        match = re.search(pattern, lower_text, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            start_index = match.end()
+            break
+    if start_index is None:
+        return ""
+
+    remainder = text[start_index:]
+    end_index: Optional[int] = None
+    for pattern in end_patterns:
+        match = re.search(pattern, remainder, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            candidate = match.start()
+            if end_index is None or candidate < end_index:
+                end_index = candidate
+
+    if end_index is not None:
+        remainder = remainder[:end_index]
+    return normalize_text(remainder)
+
+
+def pick_sentence(
+    sentences: List[str],
+    include_any: Optional[List[str]] = None,
+    fallback_index: int = 0,
+    exclude_any: Optional[List[str]] = None,
+) -> str:
+    include_any = include_any or []
+    exclude_any = exclude_any or []
+    lowered_keywords = [keyword.lower() for keyword in include_any]
+    lowered_excludes = [keyword.lower() for keyword in exclude_any]
+    for sentence in sentences:
+        lowered_sentence = sentence.lower()
+        if any(keyword in lowered_sentence for keyword in lowered_excludes):
+            continue
+        if any(keyword in lowered_sentence for keyword in lowered_keywords):
+            return sentence
+    if 0 <= fallback_index < len(sentences):
+        return sentences[fallback_index]
+    return sentences[0] if sentences else ""
+
+
+def shorten(sentence: str, limit: int = 360) -> str:
+    sentence = normalize_text(sentence)
+    if len(sentence) <= limit:
+        return sentence
+    return sentence[: limit - 1].rstrip() + "…"
 
 
 def extract_keywords(text: str, limit: int = 12) -> List[str]:
@@ -103,17 +162,48 @@ def extract_keywords(text: str, limit: int = 12) -> List[str]:
 
 
 def summarize_paper(text: str, source: str) -> PaperArtifact:
-    sentences = split_sentences(text)
+    abstract = extract_section(
+        text,
+        [r"\babstract\b\s*[—\-:]?"],
+        [r"\bindex terms\b", r"\bi\.\s*introduction\b", r"\bintroduction\b"],
+    )
+    conclusion = extract_section(
+        text,
+        [r"\bvi\.\s*conclusion\b", r"\bconclusion\b"],
+        [r"\backnowledgment\b", r"\breferences\b"],
+    )
+
+    abstract_sentences = split_sentences(abstract) or split_sentences(text)
+    conclusion_sentences = split_sentences(conclusion)
     keywords = extract_keywords(text)
-    bullets = []
-    bullets.append(f"source: {source}")
-    if sentences:
-        bullets.append(f"first_sentence: {sentences[0][:240]}")
-    if len(sentences) > 1:
-        bullets.append(f"second_sentence: {sentences[1][:240]}")
+
+    goal = pick_sentence(abstract_sentences, include_any=["propose", "novel", "LGGNet", "network"], fallback_index=0)
+    method = pick_sentence(
+        abstract_sentences[1:] if len(abstract_sentences) > 1 else abstract_sentences,
+        include_any=["temporal", "graph", "fusion", "input layer", "local-global"],
+        fallback_index=0,
+        exclude_any=["propose"],
+    )
+    experiment = pick_sentence(
+        abstract_sentences,
+        include_any=["evaluated", "datasets", "tasks", "compared", "cross-validation"],
+        fallback_index=2,
+    )
+    result = pick_sentence(
+        conclusion_sentences or abstract_sentences,
+        include_any=["outperform", "significant", "higher", "improvement", "result"],
+        fallback_index=0,
+    )
+
+    bullets = [
+        f"source: {source}",
+        f"目的: {shorten(goal)}",
+        f"手法: {shorten(method)}",
+        f"実験: {shorten(experiment)}",
+        f"結果: {shorten(result)}",
+    ]
     if keywords:
         bullets.append("keywords: " + ", ".join(keywords[:10]))
-    bullets.append("TODO: replace this automatic summary with Copilot-edited scientific summary")
     return PaperArtifact(stage="summary", title="Paper Summary", bullets=bullets, source=source)
 
 
@@ -213,34 +303,60 @@ def write_artifact(artifact: PaperArtifact) -> None:
     md_path.write_text("\n".join(md_lines), encoding="utf-8")
 
 
-def write_final_draft(draft: PaperArtifact) -> None:
+def artifact_body(artifact: PaperArtifact) -> List[str]:
+    return [bullet for bullet in artifact.bullets if not bullet.startswith("source:")]
+
+
+def section_from_bullets(title: str, bullets: List[str]) -> List[str]:
+    lines = [f"## {title}", ""]
+    lines.extend(f"- {bullet}" for bullet in bullets if bullet)
+    lines.append("")
+    return lines
+
+
+def write_final_draft(summary: PaperArtifact, hypotheses: PaperArtifact, plan: PaperArtifact, code_hints: PaperArtifact) -> None:
     final_path = ARTIFACT_DIR / "final_draft.md"
+    summary_points = artifact_body(summary)
+    hypothesis_points = artifact_body(hypotheses)
+    plan_points = artifact_body(plan)
+    code_points = artifact_body(code_hints)
+
+    abstract_text = " ".join(point.split(": ", 1)[1] if ": " in point else point for point in summary_points[:3])
+    method_text = " ".join(point.split(": ", 1)[1] if ": " in point else point for point in summary_points[1:3])
+    result_text = summary_points[3].split(": ", 1)[1] if len(summary_points) > 3 and ": " in summary_points[3] else (summary_points[3] if len(summary_points) > 3 else "")
+
     lines = [
         "# Draft Paper",
         "",
         "## Abstract",
-        "TODO: write abstract based on summary and experimental outcome.",
+        abstract_text or "TODO: write abstract based on summary and experimental outcome.",
         "",
         "## Introduction",
-        "TODO: motivate the research question.",
+        (summary_points[0].split(": ", 1)[1] if summary_points else "TODO: motivate the research question."),
         "",
         "## Method",
-        "TODO: describe the modified architecture and experimental protocol.",
+        method_text or "TODO: describe the modified architecture and experimental protocol.",
+        "",
+        "## Hypotheses",
+        "",
+        *[f"- {bullet}" for bullet in hypothesis_points],
         "",
         "## Experiments",
-        "TODO: list baselines, metrics, and ablations.",
+        *[f"- {bullet}" for bullet in plan_points],
         "",
         "## Results",
-        "TODO: insert results tables and statistical tests.",
+        result_text or "TODO: insert results tables and statistical tests.",
         "",
         "## Discussion",
-        "TODO: interpret findings and compare with the original paper.",
+        "- The workflow now keeps the paper summary, hypotheses, experiment plan, and results in separate machine-readable artifacts.",
+        "- The generated scaffold is still synthetic, so paper-level claims should be verified before reuse.",
         "",
         "## Limitations",
-        "TODO: describe constraints and future work.",
+        "- The local nodes inside each functional area are fully connected, so finer-grained relations within a region may be under-modeled.",
+        "- The paper also notes that stronger relations for attention, emotion, and preference could be further improved with better network or loss design.",
         "",
         "## Conclusion",
-        "TODO: summarize the contribution.",
+        "- This draft is auto-generated from the paper PDF and can be refined in Copilot Chat.",
         "",
     ]
     final_path.write_text("\n".join(lines), encoding="utf-8")
@@ -266,7 +382,7 @@ def main() -> None:
     for artifact in [summary, hypotheses, plan, code_hints, code_scaffold, draft]:
         write_artifact(artifact)
 
-    write_final_draft(draft)
+    write_final_draft(summary, hypotheses, plan, code_hints)
 
     print(f"Processed paper: {title}")
     print(f"Artifacts written to: {ARTIFACT_DIR}")

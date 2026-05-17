@@ -1,15 +1,15 @@
 # Paper Summary
 
-- source: LGGNet_Learning_From_Local-Global-Graph_Representations_for_BrainComputer_Interface.pdf
-- first_sentence: IEEE TRANSACTIONS ON NEURAL NETWORKS AND LEARNING SYSTEMS, VOL.
-- second_sentence: 35, NO.
+- source: C:\Multi-AIAgent\LGGNet_Learning_From_Local-Global-Graph_Representations_for_BrainComputer_Interface.pdf
+- 目的: To learn the brain activities within and among different functional areas of the brain, we propose local-global-graph network (LGGNet), a novel neurologically inspired graph neural network (GNN), to learn local-globalgraph (LGG) representations of electroencephalography (EEG) for brain–computer interface (BCI).
+- 手法: The input layer of LGGNet comprises a series of temporal convolutions with multiscale 1-D convolutional kernels and kernel-level attentive fusion.
+- 実験: Under the robust nested crossvalidation settings, the proposed method is evaluated on three publicly available datasets for four types of cognitive classiﬁcation tasks, namely the attention, fati gue, emotion, and preference classiﬁcation tasks.
+- 結果: The results show that LGGNet outperforms these methods, and the improvements are statistically signiﬁcant ( p < 0.05) in most cases.
 - keywords: the, and, of, in, to, for, is, are, eeg, local
-- TODO: replace this automatic summary with Copilot-edited scientific summary
 
 
 ## Auto-reviewed notes
-- # Paper Summary
-- - source: LGGNet_Learning_From_Local-Global-Graph_Representations_for_BrainComputer_Interface.pdf
-- - first_sentence: IEEE TRANSACTIONS ON NEURAL NETWORKS AND LEARNING SYSTEMS, VOL.
-- - second_sentence: 35, NO.
-- - keywords: the, and, of, in, to, for, is, are, eeg, local
+- 目的: To learn the brain activities within and among different functional areas of the brain, we propose local-global-graph network (LGGNet), a novel neurologically inspired graph neural network (GNN), to learn local-globalgraph (LGG) representations of electroencephalography (EEG) for brain–computer interface (BCI).
+- 手法: The input layer of LGGNet comprises a series of temporal convolutions with multiscale 1-D convolutional kernels and kernel-level attentive fusion.
+- 実験: Under the robust nested crossvalidation settings, the proposed method is evaluated on three publicly available datasets for four types of cognitive classiﬁcation tasks, namely the attention, fati gue, emotion, and preference classiﬁcation tasks.
+- 結果: The results show that LGGNet outperforms these methods, and the improvements are statistically signiﬁcant ( p < 0.05) in most cases.

@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import json
 
 METRICS = Path('research/artifacts/metrics.json')
@@ -11,10 +12,9 @@ def main():
         return
     metrics = json.loads(METRICS.read_text(encoding='utf-8'))
     text = FINAL.read_text(encoding='utf-8') if FINAL.exists() else '# Draft Paper\n\n'
-    # Simple replacement: insert results under Results section
-    results_block = f"## Results\n\nAuto-inserted results:\n\n- accuracy: {metrics.get('accuracy')}\n\n"
+    results_block = f"## Results\n\n- workspace smoke-test accuracy: {metrics.get('accuracy')}\n\n"
     if '## Results' in text:
-        text = text.replace('## Results\nTODO: insert results tables and statistical tests.', results_block)
+        text = re.sub(r"## Results\n(?:.*?\n)*?(?=\n## |\Z)", results_block, text, flags=re.S)
     else:
         text = text + '\n' + results_block
     FINAL.write_text(text, encoding='utf-8')
