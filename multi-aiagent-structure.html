@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-AIAgent Structure</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@300;400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0e1a;
+    color: #e0e8ff;
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(100,160,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100,160,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.7s ease both;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+    letter-spacing: 0.08em;
+    color: #7eb8ff;
+    text-shadow: 0 0 30px rgba(126,184,255,0.4);
+  }
+
+  .header p {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.85rem;
+    color: #6a80b0;
+    margin-top: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  /* WORKFLOW PIPELINE */
+  .section-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: #4a6090;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    border-left: 3px solid #2a4070;
+    padding-left: 10px;
+  }
+
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 48px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .pipe-step {
+    flex: 1;
+    min-width: 120px;
+    background: linear-gradient(135deg, #101828, #0d1520);
+    border: 1px solid #1e3050;
+    border-radius: 10px;
+    padding: 16px 10px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    cursor: default;
+  }
+
+  .pipe-step:hover {
+    border-color: #3a70d0;
+    box-shadow: 0 0 20px rgba(58,112,208,0.2);
+  }
+
+  .pipe-step .icon {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .pipe-step .label {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.72rem;
+    color: #90aadd;
+    line-height: 1.4;
+  }
+
+  .pipe-step .agent-name {
+    font-size: 0.58rem;
+    color: #3a70d0;
+    letter-spacing: 0.1em;
+    margin-top: 6px;
+    display: block;
+  }
+
+  .pipe-arrow {
+    color: #2a4070;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    padding: 0 4px;
+    position: relative;
+    top: -2px;
+  }
+
+  /* LAYOUT: two columns */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s 0.35s ease both;
+  }
+
+  @media (max-width: 640px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  /* TREE */
+  .tree-card {
+    background: #080d18;
+    border: 1px solid #1a2840;
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .tree-card h2 {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    color: #4a6090;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    border-left: 3px solid #2a4070;
+    padding-left: 10px;
+  }
+
+  .tree {
+    font-size: 0.75rem;
+    line-height: 1.9;
+    color: #8090b0;
+  }
+
+  .tree .root { color: #7eb8ff; font-weight: 700; }
+  .tree .folder { color: #60c8a0; }
+  .tree .file { color: #8090b0; }
+  .tree .file.key { color: #c0a060; }
+  .tree .file.pdf { color: #e07070; }
+  .tree .connector { color: #2a4070; }
+
+  /* TECH STACK */
+  .stack-card {
+    background: #080d18;
+    border: 1px solid #1a2840;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stack-card h2 {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    color: #4a6090;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    border-left: 3px solid #2a4070;
+    padding-left: 10px;
+  }
+
+  .tech-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #0d1522;
+    border: 1px solid #1a2840;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+  }
+
+  .tech-item:hover { border-color: #2a5090; }
+
+  .tech-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .tech-name {
+    font-size: 0.72rem;
+    color: #a0b8d8;
+    flex: 1;
+  }
+
+  .tech-desc {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.65rem;
+    color: #4a6080;
+  }
+
+  /* AGENTS GRID */
+  .agents-section {
+    animation: fadeUp 0.8s 0.5s ease both;
+    margin-bottom: 28px;
+  }
+
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .agent-card {
+    background: #080d18;
+    border: 1px solid #1a2840;
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: all 0.25s;
+    cursor: default;
+  }
+
+  .agent-card:hover {
+    border-color: #3a70d0;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(10,14,26,0.5), 0 0 16px rgba(58,112,208,0.15);
+  }
+
+  .agent-card .a-icon { font-size: 1.1rem; margin-bottom: 6px; }
+  .agent-card .a-name { font-size: 0.68rem; color: #5090e0; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .agent-card .a-file { font-size: 0.6rem; color: #304060; margin-bottom: 6px; }
+  .agent-card .a-desc {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.68rem;
+    color: #6a80a0;
+    line-height: 1.5;
+  }
+
+  /* DOCKER SECTION */
+  .docker-section {
+    background: #080d18;
+    border: 1px solid #1a3050;
+    border-radius: 12px;
+    padding: 20px 24px;
+    animation: fadeUp 0.8s 0.6s ease both;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .docker-section .d-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: #4a6090;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .docker-boxes {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .dbox {
+    background: #0d1828;
+    border: 1px solid #1e3a5a;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.7rem;
+    color: #5090c0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dbox .dd { font-family: 'Noto Sans JP', sans-serif; color: #4a6080; font-size: 0.62rem; }
+
+  /* ARTIFACTS */
+  .artifacts-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .artifact-chip {
+    background: #0d1a28;
+    border: 1px solid #1e3050;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.62rem;
+    color: #507090;
+    letter-spacing: 0.05em;
+  }
+
+  .artifact-chip.out { border-color: #304a20; color: #70a050; }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Multi-AIAgent</h1>
+    <p>論文PDFを起点にした汎用研究ワークフロー &nbsp;／&nbsp; Copilot Agent Mode</p>
+  </div>
+
+  <!-- WORKFLOW PIPELINE -->
+  <p class="section-title">Research Workflow Pipeline</p>
+  <div class="pipeline">
+    <div class="pipe-step">
+      <span class="icon">📄</span>
+      <span class="label">論文 PDF<br>入力</span>
+      <span class="agent-name">INPUT</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="icon">📖</span>
+      <span class="label">論文<br>要約</span>
+      <span class="agent-name">@paper_reader</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="icon">💡</span>
+      <span class="label">仮説<br>生成</span>
+      <span class="agent-name">@hypothesis</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="icon">🔬</span>
+      <span class="label">実験<br>計画</span>
+      <span class="agent-name">@experiment</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="icon">⚙️</span>
+      <span class="label">コード<br>生成/改良</span>
+      <span class="agent-name">@code_reviewer</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="icon">✍️</span>
+      <span class="label">論文<br>草案</span>
+      <span class="agent-name">@paper_writer</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="icon">📝</span>
+      <span class="label">final_<br>draft.md</span>
+      <span class="agent-name">OUTPUT</span>
+    </div>
+  </div>
+
+  <!-- TREE + TECH STACK -->
+  <div class="two-col">
+    <!-- DIRECTORY TREE -->
+    <div class="tree-card">
+      <h2>Directory Tree</h2>
+      <div class="tree">
+<span class="root">Multi-AIAgent/</span>
+<br><span class="connector">├─ </span><span class="folder">agents/</span>
+<br><span class="connector">│  ├─ </span><span class="file">research_agent_sequence.md</span>
+<br><span class="connector">│  ├─ </span><span class="file key">paper_reader.agent.md</span>
+<br><span class="connector">│  ├─ </span><span class="file key">hypothesis.agent.md</span>
+<br><span class="connector">│  ├─ </span><span class="file key">experiment.agent.md</span>
+<br><span class="connector">│  ├─ </span><span class="file key">code_reviewer.agent.md</span>
+<br><span class="connector">│  └─ </span><span class="file key">paper_writer.agent.md</span>
+<br><span class="connector">├─ </span><span class="folder">research/</span>
+<br><span class="connector">│  ├─ </span><span class="file key">research_workflow.py</span>
+<br><span class="connector">│  ├─ </span><span class="folder">artifacts/</span><span class="file" style="font-size:0.65rem">  ← 生成物</span>
+<br><span class="connector">│  └─ </span><span class="folder">generated_code/</span><span class="file" style="font-size:0.65rem">  ← scaffold</span>
+<br><span class="connector">├─ </span><span class="folder">scripts/</span>
+<br><span class="connector">├─ </span><span class="folder">tools/</span>
+<br><span class="connector">├─ </span><span class="folder">.vscode/</span>
+<br><span class="connector">├─ </span><span class="file key">Dockerfile</span>
+<br><span class="connector">├─ </span><span class="file key">docker-compose.yml</span>
+<br><span class="connector">├─ </span><span class="file">requirements.txt</span>
+<br><span class="connector">├─ </span><span class="file">RUNBOOK.md</span>
+<br><span class="connector">├─ </span><span class="file">README.md</span>
+<br><span class="connector">└─ </span><span class="file pdf">LGGNet_...pdf</span>
+      </div>
+    </div>
+
+    <!-- TECH STACK -->
+    <div class="stack-card">
+      <h2>Tech Stack</h2>
+      <div class="tech-item">
+        <div class="tech-dot" style="background:#2a82ea"></div>
+        <span class="tech-name">GitHub Copilot Agent Mode</span>
+        <span class="tech-desc">エージェント制御</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-dot" style="background:#3c9a6e"></div>
+        <span class="tech-name">Python 95.9%</span>
+        <span class="tech-desc">research_workflow.py</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-dot" style="background:#5b8fc7"></div>
+        <span class="tech-name">PowerShell 3.5%</span>
+        <span class="tech-desc">scripts/</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-dot" style="background:#0db7ed"></div>
+        <span class="tech-name">Docker 0.6%</span>
+        <span class="tech-desc">Dockerfile + compose</span>
+      </div>
+      <div class="tech-item">
+        <div class="tech-dot" style="background:#e07070"></div>
+        <span class="tech-name">pypdf</span>
+        <span class="tech-desc">PDF テキスト抽出</span>
+      </div>
+
+      <!-- artifacts -->
+      <div style="margin-top:6px">
+        <div class="d-label">Artifacts (生成物)</div>
+        <div class="artifacts-row">
+          <span class="artifact-chip">summary.md</span>
+          <span class="artifact-chip">hypotheses.md</span>
+          <span class="artifact-chip">experiment_plan.md</span>
+          <span class="artifact-chip out">final_draft.md</span>
+          <span class="artifact-chip out">generated_code/</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENTS DETAIL -->
+  <div class="agents-section">
+    <p class="section-title" style="margin-bottom:14px">Agents Detail</p>
+    <div class="agents-grid">
+      <div class="agent-card">
+        <div class="a-icon">📖</div>
+        <div class="a-name">@paper_reader</div>
+        <div class="a-file">paper_reader.agent.md</div>
+        <div class="a-desc">論文 PDF を読み込み、要点を要約。summary.md を生成する。</div>
+      </div>
+      <div class="agent-card">
+        <div class="a-icon">💡</div>
+        <div class="a-name">@hypothesis</div>
+        <div class="a-file">hypothesis.agent.md</div>
+        <div class="a-desc">要約を元に改良仮説を複数提案する。</div>
+      </div>
+      <div class="agent-card">
+        <div class="a-icon">🔬</div>
+        <div class="a-name">@experiment</div>
+        <div class="a-file">experiment.agent.md</div>
+        <div class="a-desc">仮説を検証する実験計画（評価指標・比較対象・失敗条件）を作成する。</div>
+      </div>
+      <div class="agent-card">
+        <div class="a-icon">⚙️</div>
+        <div class="a-name">@code_reviewer</div>
+        <div class="a-file">code_reviewer.agent.md</div>
+        <div class="a-desc">コード改良案・最小差分の baseline scaffold を生成する。</div>
+      </div>
+      <div class="agent-card">
+        <div class="a-icon">✍️</div>
+        <div class="a-name">@paper_writer</div>
+        <div class="a-file">paper_writer.agent.md</div>
+        <div class="a-desc">実験結果から論文草案（Abstract / Intro / Method / Results / Discussion）を執筆。</div>
+      </div>
+      <div class="agent-card">
+        <div class="a-icon">🔄</div>
+        <div class="a-name">research_workflow.py</div>
+        <div class="a-file">research/research_workflow.py</div>
+        <div class="a-desc">論文 PDF から草案と code scaffold を自動生成する CLI ツール。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCKER -->
+  <div class="docker-section">
+    <div>
+      <div class="d-label">Docker Environment</div>
+      <div style="font-family:'Noto Sans JP',sans-serif; font-size:0.72rem; color:#506080; margin-top:4px;">
+        依存パッケージをコンテナ内で解決。<br>ローカル Python 環境不要で動作可能。
+      </div>
+    </div>
+    <div class="docker-boxes">
+      <div class="dbox">🐳 Dockerfile <span class="dd">イメージ定義</span></div>
+      <div class="dbox">🧩 docker-compose.yml <span class="dd">サービス起動</span></div>
+      <div class="dbox">📋 requirements.txt <span class="dd">pypdf 等</span></div>
+      <div class="dbox">⚙️ .vscode/settings.json <span class="dd">自動承認設定</span></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
